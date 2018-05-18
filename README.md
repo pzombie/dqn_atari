@@ -20,4 +20,4 @@ https://becominghuman.ai/lets-build-an-atari-ai-part-1-dqn-df57e8ff3b26
 
 https://yanpanlau.github.io/2016/07/10/FlappyBird-Keras.html
 
-[1] Human-level control through deep reinforcement learning, Nature (2015)
+[1] Mnih et al., Human-level control through deep reinforcement learning, Nature (2015)

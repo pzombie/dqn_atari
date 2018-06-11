@@ -26,30 +26,30 @@ class replay_buffer:
         # increment the next index, wrapping if necessary
         self._next_idx = (self._next_idx + 1) % self._max_size
     
-    def get_batch_indexes(self, batch_size):
-        if len(self._experience_buffer) < batch_size:
-            return []
-        else:
+    def get_batch(self, batch_size):
+        # Pretty sure this function is leading to the creation of unnecessary copies of arrays... but where? Help.
+        observations_t0, actions, rewards, dones, observations_t1 = [], [], [], [], []
+        
+        while len(actions) < batch_size:
+            
             # Don't choose the elements near the start of the buffer so we don't have to 
             # deal with indexing a list slice across the boundary. That means there's essentially
             # some "dead" elements in the experience buffer, but we've got plenty so this should
             # be fine.
-            return [np.random.randint(4, len(self._experience_buffer) - 2) for _ in range(batch_size)]
-        
-    def get_batch(self, indexes):
-        # Pretty sure this function is leading to the creation of unnecessary copies of arrays... but where? Help.
-        observations_t0, actions, rewards, dones, observations_t1 = [], [], [], [], []
-        for index in indexes:
+            index = np.random.randint(4, len(self._experience_buffer) - 2)
             
-            experience = self._experience_buffer[index]
-            action, reward, done = experience
-            
-            observations_t0.append(self._observation_buffer[index-4:index+0])
-            observations_t1.append(self._observation_buffer[index-3:index+1])
-            
-            actions.append(action)
-            rewards.append(reward)
-            dones.append(done)
+            # check if any (except the last) frame is terminal
+            if True in [done for action, reward, done in self._experience_buffer[index-4:index+0]]:
+                continue
+            else:
+                experience = self._experience_buffer[index]
+                action, reward, done = experience
+                observations_t0.append(self._observation_buffer[index-4:index+0])
+                observations_t1.append(self._observation_buffer[index-3:index+1])
+
+                actions.append(action)
+                rewards.append(reward)
+                dones.append(done)
             
         obs0_    = np.transpose(np.array(observations_t0, copy = False), (0, 2, 3, 1))
         actions_ = np.array(actions)

@@ -1,11 +1,21 @@
 from keras.models import Sequential, model_from_config, Model
-from keras.layers import Dense, Activation, Flatten, Conv2D, Input, Multiply
-from keras.optimizers import RMSprop
+from keras.layers import Dense, Activation, Flatten, Conv2D, Input, Multiply, Lambda
+from keras.optimizers import RMSprop, Adam
+import keras.backend as K
 import tensorflow as tf
 
 config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
 session = tf.Session(config=config)
+
+def huber_loss(y_true, y_pred):
+    # https://en.wikipedia.org/wiki/Huber_loss
+    clip_value    = 10.0
+    x             = y_true - y_pred
+    squared_error = 0.5 * K.square(x)
+    linear_error  = clip_value*(K.abs(x) - 0.5*clip_value)
+    condition     = K.abs(x) < clip_value
+    return K.mean(tf.where(condition, squared_error, linear_error), axis = -1)
 
 class DDQN:
     """Construct a Double Deep Q-Learning Network"""
@@ -33,7 +43,8 @@ class DDQN:
         # taken.
 
         self.base_model = Sequential()
-        self.base_model.add(Conv2D(32, (8, 8), strides=(4, 4), input_shape=self.atari_shape))
+        self.base_model.add(Lambda(lambda x: x / 255.0, input_shape=self.atari_shape))
+        self.base_model.add(Conv2D(32, (8, 8), strides=(4, 4)))
         self.base_model.add(Activation('relu'))
         self.base_model.add(Conv2D(64, (4, 4), strides=(2, 2)))
         self.base_model.add(Activation('relu'))
@@ -53,8 +64,9 @@ class DDQN:
         # target_model is never trained - it's always merely a clone of model, used for predictions only
         config = {'class_name': self.model.__class__.__name__, 'config': self.model.get_config(),}
         self.target_model = model_from_config(config)
-        self.target_model.compile(optimizer='sgd', loss='mse') # optimizer and loss are never used, so are set arbitrarily
+        self.target_model.compile(optimizer='sgd', loss=huber_loss) # optimizer and loss are never used, so are set arbitrarily
 
         # Mnih et al. uses RMSprop... some other implementations use Adam
         # model.compile(optimizer=Adam(lr=1e-4), loss='mse')
-        self.model.compile(optimizer=RMSprop(lr=0.00025, rho=0.95, epsilon=0.01), loss='mse')
+        self.model.compile(optimizer=Adam(lr=0.000025), loss=huber_loss) # from keras-rl
+#         self.model.compile(optimizer=RMSprop(lr=0.00025, rho=0.95, epsilon=0.01), loss=huber_loss)

@@ -17,15 +17,15 @@ class replay_buffer:
         # haven't yet filled the buffer
         if self._next_idx >= len(self._experience_buffer):
             self._experience_buffer.append(experience)
-            self._observation_buffer.append(observation_t0)
+            self._observation_buffer.append(observation_t0.copy())
         # replace old elements
         else:
             self._experience_buffer[self._next_idx] = experience
-            self._observation_buffer[self._next_idx] = observation_t0
+            self._observation_buffer[self._next_idx] = observation_t0.copy()
             
         # increment the next index, wrapping if necessary
         self._next_idx = (self._next_idx + 1) % self._max_size
-    
+        
     def get_batch(self, batch_size):
         # Pretty sure this function is leading to the creation of unnecessary copies of arrays... but where? Help.
         observations_t0, actions, rewards, dones, observations_t1 = [], [], [], [], []
@@ -61,7 +61,7 @@ class replay_buffer:
     
     def get_last_state(self):
         if self._next_idx >= 4:
-            return np.dstack(self._observation_buffer[self._next_idx-4:self._next_idx])
+            return np.dstack(self._observation_buffer[self._next_idx-4:self._next_idx]).copy()
         # wrapping the container
         else:
-            return np.dstack(self._observation_buffer[self._max_size - 4 + self._next_idx:] + self._observation_buffer[0:self._next_idx])
+            return np.dstack(self._observation_buffer[self._max_size - 4 + self._next_idx:] + self._observation_buffer[0:self._next_idx]).copy()

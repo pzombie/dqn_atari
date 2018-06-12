@@ -4,6 +4,7 @@ The repository is a learning project; essentially me trying to figure out how De
 It's a re-implementation of the DeepMind DQN algorithm by Mnih et al. [1], with the Double Q-Learning modification by van Hasselt et al. [2]. I've tried to keep the code simple, so it's easy to understand, and also fast to keep debugging cycles short... debugging this thing took forever (!).
 
 Here's the agent playing Breakout after about 10M observations. This took about 20 hours (wall time) on my desktop PC (1080 Ti) @ roughly 150 frames per second. 
+
 <img src="assets/breakout_399_decimated.gif" width="480">
 
 I've learned a lot from the implementations of others. Notably from:
